@@ -14,7 +14,7 @@ local HUB = {
 }
 
 local placeId = game.PlaceId
-local gameData = HUB[placeId] or { name = "Unknown Game #" .. placeId, scripts = {} }
+local gameData = HUB[placeId] or { name = "Game Not Supported #" .. placeId, scripts = {} }
 
 -- Exact Design Colors
 local COL_BG       = Color3.fromRGB(11, 12, 11)
