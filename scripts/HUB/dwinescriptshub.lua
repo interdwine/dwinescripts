@@ -164,7 +164,7 @@ execBtn.MouseButton1Click:Connect(function()
     else
         execBtn.Text = "NO SCRIPT FOUND"
         task.wait(1)
-        execBtn.Text = "EXECUTE FREE"
+        execBtn.Text = "EXECUTE"
     end
 end)
 
