@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dwine's Scripts</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#060606;--surface:#0a0a0a;--surface2:#0d0d0d;
+    --border:#1c3a1c;--border2:#142a14;
+    --green:#27ae60;--green3:#1a5a1a;--green4:#0f2a0f;--green5:#0b1e0b;
+    --amber:#5a3a00;--amber-bg:#1a1000;--amber-border:#3a2400;
+    --mono:'Share Tech Mono','Courier New',monospace;
+    --ui:'Rajdhani',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--green);font-family:var(--mono);min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px);pointer-events:none;z-index:9999;}
+  body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(28,58,28,0.1) 1px,transparent 1px),linear-gradient(90deg,rgba(28,58,28,0.1) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+
+  nav{position:relative;z-index:10;border-bottom:1px solid var(--border2);background:var(--surface);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:48px;}
+  .nav-logo{font-family:var(--ui);font-weight:600;font-size:16px;letter-spacing:3px;text-transform:uppercase;color:var(--green);}
+  .nav-logo span{color:var(--green3);}
+  .nav-links{display:flex;gap:2rem;list-style:none;}
+  .nav-links a{color:var(--green3);text-decoration:none;font-size:10px;letter-spacing:2px;text-transform:uppercase;transition:color .15s;}
+  .nav-links a:hover{color:var(--green);}
+  .nav-status{display:flex;align-items:center;gap:6px;font-size:9px;color:var(--green3);letter-spacing:1px;}
+  .sdot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.4s ease-in-out infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.25}}
+
+  .hero{position:relative;z-index:1;text-align:center;padding:5rem 2rem 3rem;}
+  .hero-tag{display:inline-block;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--green3);border:1px solid var(--border2);padding:4px 12px;border-radius:3px;margin-bottom:1.5rem;}
+  .hero-title{font-family:var(--ui);font-size:clamp(2.5rem,6vw,5rem);font-weight:600;letter-spacing:6px;text-transform:uppercase;color:var(--green);line-height:1;margin-bottom:.5rem;}
+  .hero-title span{color:var(--green3);}
+  .hero-sub{font-size:10px;letter-spacing:2px;color:var(--green3);margin-bottom:2.5rem;}
+  .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+  .btn-p{background:var(--green4);border:1px solid var(--green);color:var(--green);padding:10px 24px;font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:4px;transition:background .15s;text-decoration:none;display:inline-block;}
+  .btn-p:hover{background:#1a3a1a;}
+  .btn-s{background:transparent;border:1px solid var(--border);color:var(--green3);padding:10px 24px;font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:4px;transition:border-color .15s,color .15s;text-decoration:none;display:inline-block;}
+  .btn-s:hover{border-color:var(--green3);color:var(--green);}
+
+  .main{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 2rem 4rem;display:grid;grid-template-columns:1fr 300px;gap:2rem;align-items:start;}
+  .slbl{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--green3);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border2);}
+
+  .stats-bar{display:flex;gap:1px;margin-bottom:2rem;}
+  .stat-item{flex:1;background:var(--surface2);border:1px solid var(--border2);padding:10px 14px;text-align:center;}
+  .stat-item:first-child{border-radius:5px 0 0 5px;}
+  .stat-item:last-child{border-radius:0 5px 5px 0;}
+  .stat-val{font-family:var(--ui);font-size:20px;font-weight:600;color:var(--green);line-height:1;}
+  .stat-lbl{font-size:7px;letter-spacing:2px;text-transform:uppercase;color:var(--green3);margin-top:3px;}
+
+  .games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-bottom:2rem;}
+  .game-card{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:12px;cursor:pointer;transition:border-color .12s,background .12s;}
+  .game-card:hover{border-color:var(--green);background:#0e160e;}
+  .game-card.active{border-color:var(--green);background:#0e160e;}
+  .gc-name{font-size:11px;color:var(--green);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .gc-id{font-size:8px;color:var(--green3);letter-spacing:1px;}
+  .gc-count{font-size:8px;color:var(--green3);margin-top:6px;}
+
+  .script-table{width:100%;border-collapse:collapse;}
+  .script-table th{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--green3);text-align:left;padding:6px 10px;border-bottom:1px solid var(--border2);}
+  .script-table td{padding:7px 10px;font-size:10px;color:var(--green);border-bottom:1px solid #0f1e0f;vertical-align:middle;}
+  .script-table tr{cursor:pointer;transition:background .1s;}
+  .script-table tr:hover td{background:#0e160e;}
+  .script-table tr.sel td{background:#0e160e;}
+  .script-table tr.sel td:first-child{border-left:2px solid var(--green);}
+  .tag{display:inline-block;font-size:7px;padding:2px 6px;border-radius:3px;letter-spacing:1px;text-transform:uppercase;}
+  .tag-free{background:var(--green5);color:var(--green3);border:1px solid var(--border2);}
+  .tag-key{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
+  .copy-btn{background:transparent;border:1px solid var(--border2);color:var(--green3);font-family:var(--mono);font-size:7px;letter-spacing:1px;padding:2px 6px;border-radius:3px;cursor:pointer;transition:border-color .12s,color .12s;}
+  .copy-btn:hover{border-color:var(--green);color:var(--green);}
+
+  .panel{position:sticky;top:1rem;}
+  .hub{background:#080808;border:1px solid var(--border);border-radius:10px;overflow:hidden;font-family:var(--mono);}
+  .hub-tb{background:#0b0b0b;border-bottom:1px solid var(--border);padding:9px 12px;display:flex;align-items:center;gap:8px;}
+  .wdots{display:flex;gap:5px;}
+  .wd{width:8px;height:8px;border-radius:50%;}
+  .wd1{background:#2a1010;}.wd2{background:#252510;}.wd3{background:#0f2a0f;}
+  .hub-tt{flex:1;text-align:center;color:var(--green);font-size:11px;letter-spacing:2px;text-transform:uppercase;}
+  .hub-body{padding:12px;}
+  .hlbl{color:var(--green3);font-size:8px;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:5px;}
+  .gdb{background:#0b0b0b;border:1px solid var(--border);border-radius:5px;padding:7px 10px;display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .pdot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;animation:blink 1.4s ease-in-out infinite;}
+  .gdname{color:var(--green);font-size:10px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .gdid{color:var(--green3);font-size:8px;flex-shrink:0;}
+  .hub-sl{display:flex;flex-direction:column;gap:4px;max-height:160px;overflow-y:auto;margin-bottom:6px;}
+  .hub-sl::-webkit-scrollbar{width:3px;}
+  .hub-sl::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+  .hub-si{background:#0b0b0b;border:1px solid var(--border2);border-radius:4px;padding:7px 9px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:border-color .12s,background .12s;}
+  .hub-si:hover{border-color:var(--green);background:#0e160e;}
+  .hub-si.sel{border-color:var(--green);background:#0e160e;}
+  .hub-sn{color:var(--green);font-size:10px;}
+  .notif{background:#0e1e0e;border:1px solid var(--green);border-radius:4px;padding:5px 8px;color:var(--green);font-size:9px;letter-spacing:.5px;text-align:center;opacity:0;max-height:0;overflow:hidden;transition:opacity .3s,max-height .3s,padding .3s,margin .3s;margin:0;}
+  .notif.show{opacity:1;max-height:30px;padding:5px 8px;margin-bottom:6px;}
+  .hdiv{border:none;border-top:1px solid var(--border2);margin:10px 0;}
+  .exec-btn{width:100%;background:#0b0b0b;border:1px solid var(--green);border-radius:5px;padding:8px;color:var(--green);font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:background .12s;}
+  .exec-btn:hover:not(:disabled){background:#102010;}
+  .exec-btn:active:not(:disabled){transform:scale(.98);}
+  .exec-btn:disabled{opacity:.35;cursor:default;}
+  .hub-sb{border-top:1px solid var(--border2);padding:5px 12px;display:flex;align-items:center;justify-content:space-between;}
+  .hub-st{color:var(--green3);font-size:8px;letter-spacing:.5px;}
+  .hub-ver{color:var(--border2);font-size:8px;}
+
+  footer{position:relative;z-index:1;border-top:1px solid var(--border2);background:var(--surface);padding:16px 2rem;display:flex;align-items:center;justify-content:space-between;}
+  footer span{font-size:8px;color:var(--green3);letter-spacing:1px;}
+
+  .info-row td{color:var(--green3)!important;font-size:9px;text-align:center;padding:20px!important;}
+
+  @media(max-width:768px){.main{grid-template-columns:1fr;}.panel{position:static;}.hero-title{font-size:2.2rem;}nav{padding:0 1rem;}.nav-links{display:none;}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Dwine<span>'s</span> Scripts</div>
+  <ul class="nav-links">
+    <li><a href="#scripts">Scripts</a></li>
+    <li><a href="#games">Games</a></li>
+    <li><a href="https://github.com/YOUR_USERNAME/YOUR_REPO" target="_blank" id="ghLink">GitHub</a></li>
+  </ul>
+  <div class="nav-status">
+    <div class="sdot"></div>
+    <span id="navStatus">LOADING</span>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-tag">Script Hub v2.4</div>
+  <div class="hero-title">Dwine<span>'s</span><br>Scripts</div>
+  <div class="hero-sub">// Auto game detection &amp; script injection</div>
+  <div class="hero-btns">
+    <a href="#scripts" class="btn-p">Browse Scripts</a>
+    <a href="https://github.com/YOUR_USERNAME/YOUR_REPO" target="_blank" class="btn-s" id="ghLink2">View Source</a>
+  </div>
+</div>
+
+<div class="main" style="padding-bottom:0;margin-bottom:1.5rem;">
+  <div style="grid-column:1/-1;">
+    <div class="stats-bar">
+      <div class="stat-item"><div class="stat-val" id="statGames">—</div><div class="stat-lbl">Games</div></div>
+      <div class="stat-item"><div class="stat-val" id="statScripts">—</div><div class="stat-lbl">Scripts</div></div>
+      <div class="stat-item"><div class="stat-val">Free</div><div class="stat-lbl">Access</div></div>
+      <div class="stat-item"><div class="stat-val">2.4</div><div class="stat-lbl">Version</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="main" id="scripts">
+  <div>
+    <div class="slbl" id="games">Supported Games</div>
+    <div class="games-grid" id="gamesGrid">
+      <div style="color:var(--green3);font-size:9px;letter-spacing:1px;">Fetching from GitHub...</div>
+    </div>
+    <div class="slbl">Scripts — <span id="activeGameName" style="color:var(--green)">Select a game</span></div>
+    <table class="script-table">
+      <thead>
+        <tr>
+          <th>Script Name</th>
+          <th>File</th>
+          <th>Type</th>
+          <th>Loadstring</th>
+        </tr>
+      </thead>
+      <tbody id="scriptTableBody">
+        <tr class="info-row"><td colspan="4">Select a game to view scripts</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <div class="hub">
+      <div class="hub-tb">
+        <div class="wdots">
+          <div class="wd wd1"></div><div class="wd wd2"></div><div class="wd wd3"></div>
+        </div>
+        <div class="hub-tt">Dwine's Scripts</div>
+      </div>
+      <div class="hub-body">
+        <div class="hlbl">Detected Game</div>
+        <div class="gdb">
+          <div class="pdot"></div>
+          <span class="gdname" id="hubGameName">Select a game</span>
+          <span class="gdid" id="hubGameId"></span>
+        </div>
+        <div class="hlbl">Available Scripts</div>
+        <div class="hub-sl" id="hubScriptList"></div>
+        <div class="notif" id="notif"></div>
+        <div class="hdiv"></div>
+        <button class="exec-btn" id="execBtn" disabled>Copy Loadstring</button>
+      </div>
+      <div class="hub-sb">
+        <span class="hub-st" id="hubStatus">Fetching scripts...</span>
+        <span class="hub-ver">v2.4</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span>Dwine's Scripts &copy; 2025</span>
+  <span id="footerTxt">Loading...</span>
+</footer>
+
+<script>
+// ╔══════════════════════════════════════════════╗
+// ║  CONFIG — edit these 3 values and you're set ║
+// ╚══════════════════════════════════════════════╝
+const GITHUB_USER    = 'YOUR_USERNAME';  // your GitHub username
+const GITHUB_REPO    = 'YOUR_REPO';      // your repo name
+const SCRIPTS_FOLDER = 'scripts';        // folder in repo that holds game subfolders
+
+// Map your folder names → Roblox Place IDs
+const PLACE_IDS = {
+  'adoptme':        '292439477',
+  'bloxfruits':     '606849621',
+  'petsimx':        '2788229376',
+  'brookhaven':     '1537690962',
+  'murdermystery2': '3260590327',
+};
+
+// Map your folder names → display names (optional)
+const DISPLAY_NAMES = {
+  'adoptme':        'Adopt Me!',
+  'bloxfruits':     'Blox Fruits',
+  'petsimx':        'Pet Simulator X',
+  'brookhaven':     'Brookhaven RP',
+  'murdermystery2': 'Murder Mystery 2',
+};
+// ══════════════════════════════════════════════
+
+const API_BASE = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents`;
+const RAW_BASE = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main`;
+const GH_URL   = `https://github.com/${GITHUB_USER}/${GITHUB_REPO}`;
+
+document.getElementById('ghLink').href  = GH_URL;
+document.getElementById('ghLink2').href = GH_URL;
+
+let selScript = null;
+
+function notify(msg) {
+  const n = document.getElementById('notif');
+  n.textContent = msg;
+  n.classList.add('show');
+  setTimeout(() => n.classList.remove('show'), 2400);
+}
+
+function toLabel(filename) {
+  return filename.replace(/\.lua$/i,'').replace(/[_\-]/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function isKey(name) {
+  return /key|paid|premium/i.test(name);
+}
+
+async function apiFetch(path) {
+  const res = await fetch(`${API_BASE}/${path}`);
+  if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
+  return res.json();
+}
+
+async function fetchGameScripts(folderName) {
+  try {
+    const files = await apiFetch(`${SCRIPTS_FOLDER}/${folderName}`);
+    return files
+      .filter(f => f.type === 'file' && f.name.endsWith('.lua'))
+      .map(f => ({
+        label:  toLabel(f.name),
+        file:   f.name,
+        rawUrl: `${RAW_BASE}/${SCRIPTS_FOLDER}/${folderName}/${f.name}`,
+        tag:    isKey(f.name) ? 'Key' : 'Free',
+      }));
+  } catch { return []; }
+}
+
+async function fetchAllGames() {
+  const folders = await apiFetch(SCRIPTS_FOLDER);
+  const dirs = folders.filter(f => f.type === 'dir');
+  const games = await Promise.all(dirs.map(async d => ({
+    folder:  d.name,
+    name:    DISPLAY_NAMES[d.name] || d.name,
+    placeId: PLACE_IDS[d.name]     || '0',
+    scripts: await fetchGameScripts(d.name),
+  })));
+  return games.filter(g => g.scripts.length > 0);
+}
+
+function syncHubSelection(scripts, label) {
+  document.querySelectorAll('.hub-si').forEach((el, i) => {
+    el.classList.toggle('sel', scripts[i]?.label === label);
+  });
+}
+
+function loadGame(g) {
+  selScript = null;
+  document.getElementById('execBtn').disabled = true;
+  document.getElementById('hubStatus').textContent    = g.scripts.length + ' scripts loaded';
+  document.getElementById('hubGameName').textContent  = g.name;
+  document.getElementById('hubGameId').textContent    = '#' + g.placeId;
+  document.getElementById('activeGameName').textContent = g.name;
+
+  document.querySelectorAll('.game-card').forEach(c =>
+    c.classList.toggle('active', c.dataset.folder === g.folder)
+  );
+
+  // Hub list
+  const list = document.getElementById('hubScriptList');
+  list.innerHTML = '';
+  g.scripts.forEach(s => {
+    const d = document.createElement('div');
+    d.className = 'hub-si';
+    d.innerHTML = `<span class="hub-sn">${s.label}</span><span class="tag ${s.tag==='Key'?'tag-key':'tag-free'}">${s.tag}</span>`;
+    d.addEventListener('click', () => {
+      document.querySelectorAll('.hub-si').forEach(x => x.classList.remove('sel'));
+      d.classList.add('sel');
+      selScript = s;
+      document.getElementById('execBtn').disabled = false;
+      document.getElementById('hubStatus').textContent = 'Selected: ' + s.label;
+    });
+    list.appendChild(d);
+  });
+
+  // Table
+  const tbody = document.getElementById('scriptTableBody');
+  tbody.innerHTML = '';
+  g.scripts.forEach(s => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${s.label}</td>
+      <td style="color:var(--green3);font-size:9px;">${s.file}</td>
+      <td><span class="tag ${s.tag==='Key'?'tag-key':'tag-free'}">${s.tag}</span></td>
+      <td><button class="copy-btn" data-url="${s.rawUrl}">Copy</button></td>
+    `;
+    tr.querySelector('.copy-btn').addEventListener('click', e => {
+      e.stopPropagation();
+      const cmd = `loadstring(game:HttpGet("${s.rawUrl}", true))()`;
+      navigator.clipboard.writeText(cmd).catch(()=>{});
+      notify('Copied: ' + s.label);
+    });
+    tr.addEventListener('click', () => {
+      document.querySelectorAll('.script-table tr').forEach(r => r.classList.remove('sel'));
+      tr.classList.add('sel');
+      selScript = s;
+      document.getElementById('execBtn').disabled = false;
+      document.getElementById('hubStatus').textContent = 'Selected: ' + s.label;
+      syncHubSelection(g.scripts, s.label);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+function buildCards(games) {
+  const grid = document.getElementById('gamesGrid');
+  grid.innerHTML = '';
+  if (!games.length) {
+    grid.innerHTML = `<div style="color:var(--green3);font-size:9px;letter-spacing:1px;">No game folders found in /${SCRIPTS_FOLDER}/</div>`;
+    return;
+  }
+  games.forEach(g => {
+    const c = document.createElement('div');
+    c.className = 'game-card';
+    c.dataset.folder = g.folder;
+    c.innerHTML = `
+      <div class="gc-name">${g.name}</div>
+      <div class="gc-id">#${g.placeId}</div>
+      <div class="gc-count">${g.scripts.length} script${g.scripts.length!==1?'s':''}</div>
+    `;
+    c.addEventListener('click', () => loadGame(g));
+    grid.appendChild(c);
+  });
+}
+
+document.getElementById('execBtn').addEventListener('click', () => {
+  if (!selScript) return;
+  const cmd = `loadstring(game:HttpGet("${selScript.rawUrl}", true))()`;
+  navigator.clipboard.writeText(cmd).catch(()=>{});
+  const btn = document.getElementById('execBtn');
+  btn.textContent = 'Copied!';
+  document.getElementById('hubStatus').textContent = selScript.label + ' — loadstring copied';
+  notify('Loadstring copied: ' + selScript.label);
+  setTimeout(() => { btn.textContent = 'Copy Loadstring'; }, 1200);
+});
+
+// Boot
+(async () => {
+  try {
+    const games = await fetchAllGames();
+    const total = games.reduce((n,g) => n + g.scripts.length, 0);
+    document.getElementById('statGames').textContent   = games.length;
+    document.getElementById('statScripts').textContent = total;
+    document.getElementById('navStatus').textContent   = 'ONLINE';
+    document.getElementById('footerTxt').textContent   = `${games.length} games · ${total} scripts · live from GitHub`;
+    buildCards(games);
+    if (games.length) loadGame(games[0]);
+    else document.getElementById('hubStatus').textContent = 'No scripts found';
+  } catch(e) {
+    console.error('[Dwine]', e);
+    document.getElementById('navStatus').textContent  = 'OFFLINE';
+    document.getElementById('hubStatus').textContent  = 'Cannot reach GitHub';
+    document.getElementById('footerTxt').textContent  = 'Check GITHUB_USER / GITHUB_REPO in config';
+    document.getElementById('gamesGrid').innerHTML    = `<div style="color:var(--green3);font-size:9px;">Error: Check console. Verify config at top of script.</div>`;
+    document.getElementById('scriptTableBody').innerHTML = `<tr class="info-row"><td colspan="4">Failed to load — check console</td></tr>`;
+  }
+})();
+</script>
+</body>
+</html>
