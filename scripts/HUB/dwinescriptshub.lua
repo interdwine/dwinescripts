@@ -17,7 +17,7 @@ local HUB = {
             { label = "FREE", url = "https://raw.githubusercontent.com/interdwine/dwinescripts/refs/heads/main/scripts/SURVIVE%20THE%20APOCALYPSE/STAFREE.lua" },
         }
     },
-    [9140270923132362] = {
+    [140270923132362] = {
         name = "TINY EMPIRES",
         scripts = {
             { label = "FREE", url = "https://raw.githubusercontent.com/interdwine/dwinescripts/refs/heads/main/scripts/TINY%20EMPIRES/TE.lua" },
