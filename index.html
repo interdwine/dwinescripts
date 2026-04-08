@@ -364,7 +364,7 @@ function buildCards(games) {
 
 document.getElementById('execBtn').addEventListener('click', () => {
   if (!selScript) return;
-  const cmd = `loadstring(game:HttpGet("${selScript.rawUrl}", true))()`;
+  const cmd = `loadstring(game:HttpGet("${selScript.rawUrl}"))()`;
   navigator.clipboard.writeText(cmd).catch(()=>{});
   const btn = document.getElementById('execBtn');
   btn.textContent = 'Copied!';
