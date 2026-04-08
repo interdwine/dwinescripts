@@ -20,6 +20,12 @@ local HUB = {
             { label = "FREE", url = "https://raw.githubusercontent.com/interdwine/dwinescripts/refs/heads/main/scripts/ENTRENCHED/FREE.lua" },
         }
     },
+	[124473577469410] = {
+        name = "BE A LUCKY BLOCK",
+        scripts = {
+            { label = "FREE", url = "https://raw.githubusercontent.com/interdwine/dwinescripts/refs/heads/main/scripts/BEALUCKYBLOCK/BALBv1.lua" },
+        }
+    },
 	[111549685046284] = {
         name = "Blue Lock Card Battles",
         scripts = {
