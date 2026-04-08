@@ -325,7 +325,7 @@ function loadGame(g) {
     `;
     tr.querySelector('.copy-btn').addEventListener('click', e => {
       e.stopPropagation();
-      const cmd = `loadstring(game:HttpGet("${s.rawUrl}", true))()`;
+      const cmd = `loadstring(game:HttpGet("${s.rawUrl}"))()`;
       navigator.clipboard.writeText(cmd).catch(()=>{});
       notify('Copied: ' + s.label);
     });
