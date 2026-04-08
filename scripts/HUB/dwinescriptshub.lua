@@ -20,6 +20,12 @@ local HUB = {
             { label = "FREE", url = "https://raw.githubusercontent.com/interdwine/dwinescripts/refs/heads/main/scripts/ENTRENCHED/FREE.lua" },
         }
     },
+	[3678761576] = {
+        name = "Blue Lock Card Battles",
+        scripts = {
+            { label = "FREE", url = "loadstring(game:HttpGet("https://raw.githubusercontent.com/interdwine/dwinescripts/refs/heads/main/scripts/BLBC/BLBCv1.lua"))()" },
+        }
+    },
     [90148635862803] = {
         name = "SURVIVE THE APOCALYPSE",
         scripts = {
