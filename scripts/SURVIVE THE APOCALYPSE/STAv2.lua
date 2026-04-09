@@ -1,3 +1,4 @@
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -944,10 +945,10 @@ end
 -- CREATE WINDUI WINDOW
 -- ============================================
 local Window = WindUI:CreateWindow({
-    Title        = "STA",
+    Title        = "STAv2",
     Icon         = "leaf",
     Author       = "Dwine",
-    Folder       = "STA",
+    Folder       = "STAv2",
     Size         = UDim2.fromOffset(580, 460),
     Theme        = "Dark",
     SideBarWidth = 180,
@@ -956,7 +957,7 @@ local Window = WindUI:CreateWindow({
 
     -- Native WindUI open/close pill button (replaces all custom toggle code)
     OpenButton = {
-        Title           = "STA",
+        Title           = "STAv2",
         Enabled         = true,
         Draggable       = true,
         OnlyMobile      = false,
@@ -970,15 +971,8 @@ local Window = WindUI:CreateWindow({
     },
 })
 
-Window:Tag({
-    Title = "v2.1",
-    Icon = "github",
-    Color = Color3.fromHex("#30ff6a"),
-    Radius = 13, -- from 0 to 13
-})
-
 WindUI:Notify({
-    Title    = "STA",
+    Title    = "STAv2",
     Content  = "Script loaded successfully!",
     Duration = 5,
 })
@@ -990,8 +984,7 @@ local Tabs = {
     ESP      = Window:Tab({ Title = "ESP",      Icon = "eye"       }),
     Combat   = Window:Tab({ Title = "Combat",   Icon = "swords"    }),
     Movement = Window:Tab({ Title = "Movement", Icon = "footprints" }),
-	Misc     = Window:Tab({ Title = "Misc",     Icon = "settings"  }),
-	Exploit  = Window:Tab({ Title = "Exploit",  Icon = "zap"        }),
+    Misc     = Window:Tab({ Title = "Misc",     Icon = "settings"  }),
 }
 
 -- ============================================
@@ -1233,8 +1226,6 @@ MovementSection:Toggle({
     end,
 })
 
-
-
 -- ============================================
 -- MISC TAB
 -- ============================================
@@ -1310,66 +1301,6 @@ FPSSection:Toggle({
         end)
     end,
 })
-
--- ============================================
--- EXPLOIT TAB  (NEW)
--- ============================================
- 
--- ── Invincible ──────────────────────────────
-local InvincibleSection = Tabs.Exploit:Section({ Title = "Invincible (Visual Only)" })
- 
-InvincibleSection:Toggle({
-    Title   = "Invincible",
-    Default = false,
-    Callback = function(value)
-        Toggles.Invincible = { Value = value }
-        if value then
-            startInvincible()
-            WindUI:Notify({
-                Title   = "Invincible",
-                Content = "ON — health locked at max (client-side).\nNote: server-authoritative games may still process damage.",
-                Duration = 4,
-            })
-        else
-            stopInvincible()
-            WindUI:Notify({ Title = "Invincible", Content = "OFF", Duration = 2 })
-        end
-    end,
-})
- 
--- ── Bring Pickup Item ────────────────────────
-local BringPickupSection = Tabs.Exploit:Section({ Title = "Bring Pickup Item" })
- 
-BringPickupSection:Toggle({
-    Title   = "Bring Pickup Item",
-    Default = false,
-    Callback = function(value)
-        Toggles.BringPickupItem = { Value = value }
-        if value then
-            startBringPickup()
-            WindUI:Notify({
-                Title   = "Bring Pickup",
-                Content = "Active — teleporting to items.\nUses 3 pickup methods in parallel.",
-                Duration = 3,
-            })
-        else
-            stopBringPickup()
-            WindUI:Notify({ Title = "Bring Pickup", Content = "Stopped", Duration = 2 })
-        end
-    end,
-})
- 
-BringPickupSection:Toggle({
-    Title   = "All Items (not just weapons/medical)",
-    Default = false,
-    Callback = function(value)
-        Toggles.BringAllPickup = { Value = value }
-    end,
-})
- 
-BringPickupSection:Label({ Title = "Default filter: Guns, Melee, Medical, Armor" })
-BringPickupSection:Label({ Title = "Methods: PickUpItem remote + TouchInterest + ProximityPrompt" })
-BringPickupSection:Label({ Title = "Auto-stops after 3 consecutive failures (backpack full)." })
 
 -- ============================================
 -- MAIN LOOPS
@@ -1577,8 +1508,5 @@ Toggles.KillAura              = { Value = false }
 Toggles.KillAuraAutoEquip     = { Value = false }
 Toggles.KillAuraShowIndicator = { Value = true  }
 Toggles.KillAuraExtendedRange = { Value = true  }
-Toggles.BringPickupItem       = { Value = false }
-Toggles.BringAllPickup        = { Value = false }
-Toggles.Invincible            = { Value = false }
 
-print("STA loaded successfully!")
+print("STAv2 loaded successfully!")
