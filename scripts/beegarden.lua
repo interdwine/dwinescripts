@@ -1,10 +1,12 @@
+-- Bee Garden Auto Farm - WindUI Edition (Complete)
 if not game:IsLoaded() then game.Loaded:Wait() end
 
-local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
-if not Rayfield then warn("Rayfield failed") return end
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+if not WindUI then warn("WindUI failed") return end
 
 -- ─── Services ─────────────────────────────────────────────────────────────────
 local RS           = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
 local Players      = game:GetService("Players")
 local TeleportSvc  = game:GetService("TeleportService")
 local HttpService  = game:GetService("HttpService")
@@ -342,6 +344,32 @@ local function fireProximityPrompt(prompt)
             success = true
         end)
     end
+    local function getModelPosition(model)
+    if not model then return nil end
+    if model:IsA("Model") then
+        local primary = model.PrimaryPart
+        if primary then return primary.Position end
+        local part = model:FindFirstChildOfClass("BasePart")
+        if part then return part.Position end
+    elseif model:IsA("BasePart") then
+        return model.Position
+    end
+    return nil
+end
+
+local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local function tweenTo(position)
+    if not position then return false end
+    local char = LP.Character
+    if not char then return false end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return false end
+    local targetPos = position + Vector3.new(0, 3, 0)
+    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = CFrame.new(targetPos)})
+    tween:Play()
+    task.wait(0.6)
+    return true
+end
     
     return success
 end
@@ -359,155 +387,161 @@ local State = {
     InfJump          = { enabled = false },
     ESPFlower        = { enabled = false },
     ESPPlayer        = { enabled = false },
+    AutoEasterEgg   = false,
+    AutoSnowflake   = false,
+    AutoMeteoron    = false,
     MyPlot           = "1",
-    WalkSpeed        = 16,
+    WalkSpeed        = 16,   
 }
 
--- ─── Window ───────────────────────────────────────────────────────────────────
-local Window = Rayfield:CreateWindow({
-    Name                   = "🐝 Bee Garden Auto Farm",
-    LoadingTitle           = "Bee Garden Script",
-    LoadingSubtitle        = "Loading by Dwine...",
-    Theme                  = "Default",
-    ShowText               = "🐝 Open",
-    DisableRayfieldPrompts = false,
-    DisableBuildWarnings   = false,
-    ConfigurationSaving    = { Enabled = false },
-    KeySystem              = false,
+-- ══════════════════════════════════════════════════════════════════════════════
+-- WINDOW CREATION
+-- ══════════════════════════════════════════════════════════════════════════════
+local Window = WindUI:CreateWindow({
+    Title = "🐝 Bee Garden",
+    Icon = "bee",
+    Author = "by Dwine",
+    Folder = "BeeGarden",
+    Size = UDim2.fromOffset(650, 480),
+    MinSize = Vector2.new(560, 400),
+    MaxSize = Vector2.new(850, 600),
+    Transparent = true,
+    Theme = "Dark",
+    Resizable = true,
+    SideBarWidth = 200,
+    HideSearchBar = true,
+    ScrollBarEnabled = true,
+    User = {
+        Enabled = true,
+        Anonymous = true,
+        Callback = function() end,
+    },
+})
+
+Window:EditOpenButton({
+    Title = "🐝 Open",
+    Icon = "bee",
+    CornerRadius = UDim.new(0, 16),
+    StrokeThickness = 2,
+    Color = ColorSequence.new(
+        Color3.fromHex("FFD700"),
+        Color3.fromHex("FFA500")
+    ),
+    OnlyMobile = false,
+    Enabled = true,
+    Draggable = true,
+})
+
+Window:Tag({
+    Title = "v1.0.0",
+    Icon = "github",
+    Color = Color3.fromHex("#30ff6a"),
+    Radius = 6,
 })
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- TAB 1 — 💰 ECONOMY
 -- ══════════════════════════════════════════════════════════════════════════════
-local EconTab = Window:CreateTab("💰 Economy", 4483362458)
+local Tab = Window:Tab({ Title = "Economy", Icon = "coins" })
 
--- Auto Claim when Honey Pot reaches percentage
-EconTab:CreateToggle({
-    Name         = "Auto Claim Coins",
-    CurrentValue = false,
-    Flag         = "AutoClaimToggle",
-    Callback     = function(val)
-        State.AutoClaim.enabled = val
-        if val then
+Tab:Section({ Title = "Auto Claim", Opened = true })
+
+Tab:Toggle({
+    Title = "Auto Claim Coins",
+    Type = "Checkbox",
+    Value = false,
+    Callback = function(v)
+        State.AutoClaim.enabled = v
+        if v then
             ConnectionManager:Cleanup("AutoClaim")
             local thread = task.spawn(function()
                 local lastClaimed = false
-                
                 while State.AutoClaim.enabled do
                     local myPlotId = State.MyPlot
                     if myPlotId == "1" then
                         myPlotId = getMyPlotId()
                         State.MyPlot = myPlotId
                     end
-                    
                     local plot = Plots:FindFirstChild(myPlotId)
                     if plot then
                         local honeyPot = plot:FindFirstChild("HoneyPot")
                         if honeyPot then
                             local fillPercentage = honeyPot:GetAttribute("FillPercentage") or 0
-                            
                             if fillPercentage >= State.AutoClaim.threshold and not lastClaimed then
                                 safeFireThrottled("ClaimCoins", ClaimCoins, 2, "Collect_Coins")
-                                Rayfield:Notify({
-                                    Title = "💰 Coins Claimed!",
-                                    Content = "Honey Pot was at " .. fillPercentage .. "%",
-                                    Duration = 2,
-                                })
+                                WindUI:Notify({ Title = "💰 Coins Claimed!", Content = "Honey Pot was at " .. fillPercentage .. "%", Duration = 2, Icon = "check-circle" })
                                 lastClaimed = true
                             elseif fillPercentage < State.AutoClaim.threshold then
                                 lastClaimed = false
                             end
                         end
                     end
-                    
                     task.wait(State.AutoClaim.checkInterval)
                 end
             end)
             ConnectionManager:RegisterThread("AutoClaim", thread)
         end
-    end,
+    end
 })
 
-EconTab:CreateSlider({
-    Name         = "Claim at Percentage",
-    Range        = {1, 100},
-    Increment    = 1,
-    Suffix       = "%",
-    CurrentValue = 80,
-    Flag         = "ClaimThreshold",
-    Callback     = function(val)
-        State.AutoClaim.threshold = val
-    end,
+Tab:Slider({
+    Title = "Claim at Percentage",
+    Step = 1,
+    Value = { Min = 1, Max = 100, Default = 80 },
+    Callback = function(v) State.AutoClaim.threshold = v end
 })
 
-EconTab:CreateSlider({
-    Name         = "Check Interval",
-    Range        = {1, 30},
-    Increment    = 1,
-    Suffix       = "s",
-    CurrentValue = 5,
-    Flag         = "ClaimCheckInterval",
-    Callback     = function(val)
-        State.AutoClaim.checkInterval = val
-    end,
+Tab:Slider({
+    Title = "Check Interval",
+    Step = 1,
+    Value = { Min = 1, Max = 30, Default = 5 },
+    Callback = function(v) State.AutoClaim.checkInterval = v end
 })
 
-EconTab:CreateDivider()
+Tab:Divider()
 
-EconTab:CreateButton({
-    Name     = "Check Honey Pot Status",
+Tab:Button({
+    Title = "Check Honey Pot Status",
+    Desc = "View current fill and coins",
     Callback = function()
         local myPlotId = State.MyPlot
         if myPlotId == "1" then
             myPlotId = getMyPlotId()
             State.MyPlot = myPlotId
         end
-        
         local plot = Plots:FindFirstChild(myPlotId)
         if plot then
             local honeyPot = plot:FindFirstChild("HoneyPot")
             if honeyPot then
-                local fillPercentage = honeyPot:GetAttribute("FillPercentage") or 0
-                local maxCapacity = honeyPot:GetAttribute("MaxCapacity") or 0
-                local currentCoins = honeyPot:GetAttribute("CurrentCoins") or 0
-                
-                Rayfield:Notify({
-                    Title = "🍯 Honey Pot Status",
-                    Content = string.format("Fill: %d%% | Coins: %d/%d", fillPercentage, currentCoins, maxCapacity),
-                    Duration = 5,
-                })
+                local fill = honeyPot:GetAttribute("FillPercentage") or 0
+                local max = honeyPot:GetAttribute("MaxCapacity") or 0
+                local cur = honeyPot:GetAttribute("CurrentCoins") or 0
+                WindUI:Notify({ Title = "🍯 Honey Pot", Content = string.format("Fill: %d%% | Coins: %d/%d", fill, cur, max), Duration = 5, Icon = "info" })
             else
-                Rayfield:Notify({
-                    Title = "❌ Error",
-                    Content = "Honey Pot not found on your plot!",
-                    Duration = 3,
-                })
+                WindUI:Notify({ Title = "❌ Error", Content = "Honey Pot not found on your plot!", Duration = 3, Icon = "alert-triangle" })
             end
         end
-    end,
+    end
 })
 
-EconTab:CreateButton({
-    Name     = "💰 Claim Now",
+Tab:Button({
+    Title = "💰 Claim Now",
+    Desc = "Force claim coins",
     Callback = function()
         safeFire(ClaimCoins, "Collect_Coins")
-        Rayfield:Notify({
-            Title = "💰 Claiming",
-            Content = "Attempting to claim coins...",
-            Duration = 2,
-        })
-    end,
+        WindUI:Notify({ Title = "💰 Claiming", Content = "Attempting to claim coins...", Duration = 2, Icon = "coins" })
+    end
 })
 
-EconTab:CreateDivider()
+Tab:Divider()
 
-EconTab:CreateToggle({
-    Name         = "Auto Sell All Flowers",
-    CurrentValue = false,
-    Flag         = "AutoSellToggle",
-    Callback     = function(val)
-        State.AutoSell.enabled = val
-        if val then
+Tab:Toggle({
+    Title = "Auto Sell All Flowers",
+    Type = "Checkbox",
+    Value = false,
+    Callback = function(v)
+        State.AutoSell.enabled = v
+        if v then
             ConnectionManager:Cleanup("AutoSell")
             local thread = task.spawn(function()
                 while State.AutoSell.enabled do
@@ -517,197 +551,138 @@ EconTab:CreateToggle({
             end)
             ConnectionManager:RegisterThread("AutoSell", thread)
         end
-    end,
+    end
 })
 
-EconTab:CreateLabel("Auto Claim checks Honey Pot FillPercentage and claims once when threshold is reached.")
+Tab:Paragraph({ Title = "Auto Claim checks Honey Pot FillPercentage and claims once when threshold is reached.", Desc = "" })
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- TAB 2 — 🐝 BEES
 -- ══════════════════════════════════════════════════════════════════════════════
-local BeesTab = Window:CreateTab("🐝 Bees", 4483362458)
+Tab = Window:Tab({ Title = "Bees", Icon = "bug" })
 
-BeesTab:CreateDropdown({
-    Name            = "Target Rarity to Buy",
-    Options         = BEE_RARITIES,
-    CurrentOption   = {"Common"},
-    MultipleOptions = true,
-    Flag            = "BeeRarityDropdown",
-    Callback        = function(sel)
-        State.AutoBuyBee.selectedRarities = sel or {"Common"}
-        local count = #State.AutoBuyBee.selectedRarities
-        Rayfield:Notify({
-            Title = "Bee Rarities",
-            Content = "Selected " .. count .. " rarit" .. (count == 1 and "y" or "ies"),
-            Duration = 2,
-        })
-    end,
+Tab:Dropdown({
+    Title = "Target Rarity to Buy",
+    Values = BEE_RARITIES,
+    Value = {"Common"},
+    Multi = true,
+    AllowNone = false,
+    Callback = function(sel)
+        State.AutoBuyBee.selectedRarities = sel
+        local count = #sel
+        WindUI:Notify({ Title = "Bee Rarities", Content = "Selected " .. count .. " rarit" .. (count==1 and "y" or "ies"), Duration = 2, Icon = "check" })
+    end
 })
 
-BeesTab:CreateToggle({
-    Name         = "Auto Buy Bee",
-    CurrentValue = false,
-    Flag         = "AutoBuyBeeToggle",
-    Callback     = function(val)
-        State.AutoBuyBee.enabled = val
-        if val then
+Tab:Toggle({
+    Title = "Auto Buy Bee",
+    Type = "Checkbox",
+    Value = false,
+    Callback = function(v)
+        State.AutoBuyBee.enabled = v
+        if v then
             ConnectionManager:Cleanup("AutoBuyBee")
             local thread = task.spawn(function()
-                local raritySlotMap = {
-                    Common=1, Uncommon=2, Rare=3, Epic=4,
-                    Legendary=5, Mythical=6, Secret=7
-                }
-                
+                local raritySlotMap = { Common=1, Uncommon=2, Rare=3, Epic=4, Legendary=5, Mythical=6, Secret=7 }
                 while State.AutoBuyBee.enabled do
-                    local selectedRarities = State.AutoBuyBee.selectedRarities
-                    
-                    if selectedRarities and #selectedRarities > 0 then
-                        for _, rarity in ipairs(selectedRarities) do
-                            if not State.AutoBuyBee.enabled then break end
-                            
-                            local base = raritySlotMap[rarity]
-                            if base then
-                                local success = safeFireThrottled("BeeShop_" .. rarity, BeeShopEvent, 1.5, "Purchase", {
-                                    slotIndex = (base * 2) - 1,
-                                    quantity  = 1,
-                                })
-                                
-                                if success then
-                                    Rayfield:Notify({
-                                        Title = "🐝 Bee Purchased",
-                                        Content = "Bought " .. rarity .. " bee!",
-                                        Duration = 1.5,
-                                    })
-                                end
-                                task.wait(1.5)
+                    for _, rarity in ipairs(State.AutoBuyBee.selectedRarities) do
+                        if not State.AutoBuyBee.enabled then break end
+                        local base = raritySlotMap[rarity]
+                        if base then
+                            local success = safeFireThrottled("BeeShop_"..rarity, BeeShopEvent, 1.5, "Purchase", { slotIndex = (base*2)-1, quantity = 1 })
+                            if success then
+                                WindUI:Notify({ Title = "🐝 Bee Purchased", Content = "Bought "..rarity.." bee!", Duration = 1.5, Icon = "shopping-cart" })
                             end
+                            task.wait(1.5)
                         end
-                    else
-                        task.wait(2)
                     end
                     task.wait(1)
                 end
             end)
             ConnectionManager:RegisterThread("AutoBuyBee", thread)
         end
-    end,
+    end
 })
 
-BeesTab:CreateDivider()
+Tab:Divider()
 
-BeesTab:CreateButton({
-    Name     = "Equip Best Bees",
+Tab:Button({
+    Title = "Equip Best Bees",
     Callback = function()
         pcall(function() BeeHandler:InvokeServer(getClient()) end)
-        Rayfield:Notify({ Title="Bees", Content="Equipping best bees!", Duration=3 })
-    end,
+        WindUI:Notify({ Title = "Bees", Content = "Equipping best bees!", Duration = 3, Icon = "zap" })
+    end
 })
 
-BeesTab:CreateButton({
-    Name     = "Unequip All Bees",
+Tab:Button({
+    Title = "Unequip All Bees",
     Callback = function()
         pcall(function() BeeHandler:InvokeServer(getClient()) end)
-        Rayfield:Notify({ Title="Bees", Content="Unequipping all bees!", Duration=3 })
-    end,
+        WindUI:Notify({ Title = "Bees", Content = "Unequipping all bees!", Duration = 3, Icon = "zap-off" })
+    end
 })
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- TAB 3 — 🥚 EGGS
 -- ══════════════════════════════════════════════════════════════════════════════
-local EggTab = Window:CreateTab("🥚 Eggs", 4483362458)
+Tab = Window:Tab({ Title = "Eggs", Icon = "egg" })
 
-EggTab:CreateButton({
-    Name     = "Auto-Detect My Plot",
+Tab:Button({
+    Title = "Auto-Detect My Plot",
     Callback = function()
         State.MyPlot = getMyPlotId()
-        Rayfield:Notify({
-            Title    = "Plot Detected",
-            Content  = "Targeting Plot: " .. State.MyPlot,
-            Duration = 3,
-        })
-    end,
+        WindUI:Notify({ Title = "Plot Detected", Content = "Targeting Plot: "..State.MyPlot, Duration = 3, Icon = "map-pin" })
+    end
 })
 
-EggTab:CreateDropdown({
-    Name            = "Conveyor Egg Filter",
-    Options         = EGG_DROPDOWN_OPTIONS,
-    CurrentOption   = {"Any"},
-    MultipleOptions = true,
-    Flag            = "ConvEggDropdown",
-    Callback        = function(sel)
-        State.AutoConvEgg.selectedOptions = sel or {"Any"}
-        local count = #State.AutoConvEgg.selectedOptions
-        Rayfield:Notify({
-            Title = "Egg Filters",
-            Content = "Selected " .. count .. " filter" .. (count == 1 and "" or "s"),
-            Duration = 2,
-        })
-    end,
+Tab:Dropdown({
+    Title = "Conveyor Egg Filter",
+    Values = EGG_DROPDOWN_OPTIONS,
+    Value = {"Any"},
+    Multi = true,
+    Callback = function(sel)
+        State.AutoConvEgg.selectedOptions = sel
+        WindUI:Notify({ Title = "Egg Filters", Content = "Selected "..#sel.." filter(s)", Duration = 2 })
+    end
 })
 
-EggTab:CreateSlider({
-    Name         = "Buy Delay (seconds)",
-    Range        = {0.1, 10},
-    Increment    = 0.1,
-    Suffix       = "s",
-    CurrentValue = 0.1,
-    Flag         = "ConvEggDelay",
-    Callback     = function(val)
-        State.AutoConvEgg.delay = val
-    end,
+Tab:Slider({
+    Title = "Buy Delay (seconds)",
+    Step = 0.1,
+    Value = { Min = 0.1, Max = 10, Default = 0.1 },
+    Callback = function(v) State.AutoConvEgg.delay = v end
 })
 
-EggTab:CreateToggle({
-    Name         = "Auto Buy Conveyor Eggs",
-    CurrentValue = false,
-    Flag         = "AutoBuyConvEggToggle",
-    Callback     = function(val)
-        State.AutoConvEgg.enabled = val
-        if val then
+Tab:Toggle({
+    Title = "Auto Buy Conveyor Eggs",
+    Value = false,
+    Callback = function(v)
+        State.AutoConvEgg.enabled = v
+        if v then
             ConnectionManager:Cleanup("AutoConvEgg")
-            
             if State.MyPlot == "1" then
                 State.MyPlot = getMyPlotId()
-                Rayfield:Notify({
-                    Title    = "Conveyor Eggs",
-                    Content  = "Auto-detected plot: " .. State.MyPlot,
-                    Duration = 3,
-                })
             end
-            
             local thread = task.spawn(function()
                 while State.AutoConvEgg.enabled do
                     local plotFolder = Plots:FindFirstChild(State.MyPlot)
                     local eggsFolder = plotFolder and plotFolder:FindFirstChild("Eggs")
-                    
                     if eggsFolder then
-                        local selectedOptions = State.AutoConvEgg.selectedOptions or {"Any"}
-                        
                         for _, egg in pairs(eggsFolder:GetChildren()) do
                             if not State.AutoConvEgg.enabled then break end
-                            
                             local shouldBuy = false
-                            
-                            for _, option in ipairs(selectedOptions) do
-                                if option == "Any" then
-                                    shouldBuy = true
-                                    break
-                                end
+                            for _, opt in ipairs(State.AutoConvEgg.selectedOptions) do
+                                if opt == "Any" then shouldBuy = true; break end
                             end
-                            
                             if not shouldBuy then
                                 local baseName = egg:GetAttribute("baseName")
                                 if baseName then
-                                    for _, option in ipairs(selectedOptions) do
-                                        local targetBase = EGG_OPTION_TO_BASENAME[option]
-                                        if targetBase and baseName == targetBase then
-                                            shouldBuy = true
-                                            break
-                                        end
+                                    for _, opt in ipairs(State.AutoConvEgg.selectedOptions) do
+                                        local targetBase = EGG_OPTION_TO_BASENAME[opt]
+                                        if targetBase and baseName == targetBase then shouldBuy = true; break end
                                     end
                                 end
                             end
-                            
                             if shouldBuy then
                                 safeFireThrottled("PurchaseConvEgg", PurchaseConvEgg, State.AutoConvEgg.delay, egg.Name, State.MyPlot)
                                 task.wait(State.AutoConvEgg.delay or 0.1)
@@ -719,18 +694,17 @@ EggTab:CreateToggle({
             end)
             ConnectionManager:RegisterThread("AutoConvEgg", thread)
         end
-    end,
+    end
 })
 
-EggTab:CreateDivider()
+Tab:Divider()
 
-EggTab:CreateToggle({
-    Name         = "Auto Hatch Eggs",
-    CurrentValue = false,
-    Flag         = "AutoHatchToggle",
-    Callback     = function(val)
-        State.AutoHatch.enabled = val
-        if val then
+Tab:Toggle({
+    Title = "Auto Hatch Eggs",
+    Value = false,
+    Callback = function(v)
+        State.AutoHatch.enabled = v
+        if v then
             ConnectionManager:Cleanup("AutoHatch")
             local thread = task.spawn(function()
                 while State.AutoHatch.enabled do
@@ -739,72 +713,50 @@ EggTab:CreateToggle({
                         myPlotId = getMyPlotId()
                         State.MyPlot = myPlotId
                     end
-                    
                     local plot = Plots:FindFirstChild(myPlotId)
                     if plot then
                         local placedItems = plot:FindFirstChild("PlacedItems")
                         if placedItems then
                             for _, item in ipairs(placedItems:GetChildren()) do
                                 if not State.AutoHatch.enabled then break end
-                                
-                                -- Check if item is an Egg
                                 if item:GetAttribute("ItemType") == "Egg" then
-                                    -- Find ProximityPrompt and check PromptType
                                     local prompt = nil
                                     for _, desc in ipairs(item:GetDescendants()) do
-                                        if desc:IsA("ProximityPrompt") then
-                                            prompt = desc
-                                            break
-                                        end
+                                        if desc:IsA("ProximityPrompt") then prompt = desc; break end
                                     end
-                                    
-                                    -- Only hatch if PromptType is "egg_ready"
-                                    if prompt then
-                                        local promptType = prompt:GetAttribute("PromptType")
-                                        if promptType == "egg_ready" then
-                                            local char = LP.Character
-                                            local hrp = char and char:FindFirstChild("HumanoidRootPart")
-                                            local primaryPart = item.PrimaryPart or item:FindFirstChildOfClass("BasePart")
-                                            
-                                            if hrp and primaryPart then
-                                                -- Teleport to egg
-                                                hrp.CFrame = primaryPart.CFrame + Vector3.new(0, 3, 0)
-                                                task.wait(0.3)
-                                                
-                                                -- Fire the prompt
-                                                if fireProximityPrompt(prompt) then
-                                                    Rayfield:Notify({
-                                                        Title = "🥚 Egg Hatched!",
-                                                        Content = "Egg is ready and hatched!",
-                                                        Duration = 2,
-                                                    })
-                                                end
-                                                task.wait(0.5)
+                                    if prompt and prompt:GetAttribute("PromptType") == "egg_ready" then
+                                        local char = LP.Character
+                                        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                                        local primaryPart = item.PrimaryPart or item:FindFirstChildOfClass("BasePart")
+                                        if hrp and primaryPart then
+                                            hrp.CFrame = primaryPart.CFrame + Vector3.new(0,3,0)
+                                            task.wait(0.3)
+                                            if fireProximityPrompt(prompt) then
+                                                WindUI:Notify({ Title = "🥚 Egg Hatched!", Content = "Egg is ready and hatched!", Duration = 2 })
                                             end
+                                            task.wait(0.5)
                                         end
                                     end
                                 end
                             end
                         end
                     end
-                    
                     task.wait(1)
                 end
             end)
             ConnectionManager:RegisterThread("AutoHatch", thread)
         end
-    end,
+    end
 })
 
-EggTab:CreateToggle({
-    Name         = "Auto Skip All Eggs",
-    CurrentValue = false,
-    Flag         = "AutoSkipEggToggle",
-    Callback     = function(val)
-        if val then
+Tab:Toggle({
+    Title = "Auto Skip All Eggs",
+    Value = false,
+    Callback = function(v)
+        if v then
             ConnectionManager:Cleanup("AutoSkipEgg")
             local thread = task.spawn(function()
-                while val do
+                while v do
                     local placedItems = getPlacedItems()
                     if placedItems then
                         for _, item in ipairs(placedItems:GetChildren()) do
@@ -813,7 +765,7 @@ EggTab:CreateToggle({
                                 local hrp  = char and char:FindFirstChild("HumanoidRootPart")
                                 local primaryPart = item.PrimaryPart or item:FindFirstChildOfClass("BasePart")
                                 if hrp and primaryPart then
-                                    hrp.CFrame = primaryPart.CFrame + Vector3.new(0, 3, 0)
+                                    hrp.CFrame = primaryPart.CFrame + Vector3.new(0,3,0)
                                     task.wait(0.2)
                                 end
                                 for _, desc in ipairs(item:GetDescendants()) do
@@ -830,29 +782,23 @@ EggTab:CreateToggle({
             end)
             ConnectionManager:RegisterThread("AutoSkipEgg", thread)
         end
-    end,
+    end
 })
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- TAB 4 — 🌸 FLOWERS
 -- ══════════════════════════════════════════════════════════════════════════════
-local FlowersTab = Window:CreateTab("🌸 Flowers", 4483362458)
+Tab = Window:Tab({ Title = "Flowers", Icon = "flower" })
 
-FlowersTab:CreateDropdown({
-    Name            = "Select Flowers to Pickup",
-    Options         = FLOWER_OPTIONS,
-    CurrentOption   = {"Any"},
-    MultipleOptions = true,
-    Flag            = "FlowerDropdown",
-    Callback        = function(sel)
-        State.AutoPickup.selectedFlowers = sel or {"Any"}
-        local count = #State.AutoPickup.selectedFlowers
-        Rayfield:Notify({
-            Title = "Flower Filter",
-            Content = "Selected " .. count .. " flower type" .. (count == 1 and "" or "s"),
-            Duration = 2,
-        })
-    end,
+Tab:Dropdown({
+    Title = "Select Flowers to Pickup",
+    Values = FLOWER_OPTIONS,
+    Value = {"Any"},
+    Multi = true,
+    Callback = function(sel)
+        State.AutoPickup.selectedFlowers = sel
+        WindUI:Notify({ Title = "Flower Filter", Content = "Selected "..#sel.." flower type(s)", Duration = 2 })
+    end
 })
 
 local function pickupFlowers()
@@ -866,50 +812,37 @@ local function pickupFlowers()
     local pickupAny = false
     
     for _, sel in ipairs(selectedFlowers) do
-        if sel == "Any" then
-            pickupAny = true
-            break
-        end
+        if sel == "Any" then pickupAny = true; break end
     end
     
     for _, item in ipairs(placedItems:GetChildren()) do
         if item:GetAttribute("ItemType") == "Flower" then
             local baseName = item:GetAttribute("BaseName") or item:GetAttribute("baseName") or "Unknown"
-            
             local shouldPickup = pickupAny
             if not shouldPickup then
                 for _, sel in ipairs(selectedFlowers) do
-                    if baseName == sel then
-                        shouldPickup = true
-                        break
-                    end
+                    if baseName == sel then shouldPickup = true; break end
                 end
             end
-            
-            if shouldPickup then
-                table.insert(flowers, item)
-            end
+            if shouldPickup then table.insert(flowers, item) end
         end
     end
     
     if #flowers == 0 then return end
-    
     equipHammer()
     task.wait(0.3)
-    
     for _, flower in ipairs(flowers) do
         safeFireThrottled("Hammer", HammerEvent, 0.1, flower.Name)
         task.wait(0.1)
     end
 end
 
-FlowersTab:CreateToggle({
-    Name         = "Auto Pickup Flowers",
-    CurrentValue = false,
-    Flag         = "AutoPickupToggle",
-    Callback     = function(val)
-        State.AutoPickup.enabled = val
-        if val then
+Tab:Toggle({
+    Title = "Auto Pickup Flowers",
+    Value = false,
+    Callback = function(v)
+        State.AutoPickup.enabled = v
+        if v then
             ConnectionManager:Cleanup("AutoPickup")
             local thread = task.spawn(function()
                 while State.AutoPickup.enabled do
@@ -919,72 +852,65 @@ FlowersTab:CreateToggle({
             end)
             ConnectionManager:RegisterThread("AutoPickup", thread)
         end
-    end,
+    end
 })
 
-FlowersTab:CreateSlider({
-    Name         = "Pickup Interval (seconds)",
-    Range        = {0.5, 10},
-    Increment    = 0.5,
-    Suffix       = "s",
-    CurrentValue = 1,
-    Flag         = "PickupInterval",
-    Callback     = function(val)
-        State.AutoPickup.interval = val
-    end,
+Tab:Slider({
+    Title = "Pickup Interval (seconds)",
+    Step = 0.5,
+    Value = { Min = 0.5, Max = 10, Default = 1 },
+    Callback = function(v) State.AutoPickup.interval = v end
 })
 
-FlowersTab:CreateLabel("Total: " .. #FLOWER_LIST .. " flower types available")
+Tab:Paragraph({ Title = "Total: " .. #FLOWER_LIST .. " flower types available", Desc = "" })
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- TAB 5 — 👑 CONVEYOR
 -- ══════════════════════════════════════════════════════════════════════════════
-local ConveyorTab = Window:CreateTab("👑 Conveyor", 4483362458)
+Tab = Window:Tab({ Title = "Conveyor", Icon = "crown" })
 
 local selectedConveyorKey = "Queen1"
 
-ConveyorTab:CreateDropdown({
-    Name            = "Select Queen Conveyor",
-    Options         = CONVEYOR_LIST,
-    CurrentOption   = {CONVEYOR_LIST[1] or "Baby Queen [Queen1]"},
-    MultipleOptions = false,
-    Flag            = "ConveyorDropdown",
-    Callback        = function(sel)
+Tab:Dropdown({
+    Title = "Select Queen Conveyor",
+    Values = CONVEYOR_LIST,
+    Value = {CONVEYOR_LIST[1] or "Baby Queen [Queen1]"},
+    Multi = false,
+    Callback = function(sel)
         local key = (sel[1] or ""):match("%[(.-)%]")
         selectedConveyorKey = key or "Queen1"
-    end,
+    end
 })
 
-ConveyorTab:CreateButton({
-    Name     = "Equip Selected Conveyor",
+Tab:Button({
+    Title = "Equip Selected Conveyor",
     Callback = function()
         safeFire(HandleConveyor, "equip", selectedConveyorKey)
-        Rayfield:Notify({ Title="Conveyor", Content="Equipping " .. selectedConveyorKey, Duration=3 })
-    end,
+        WindUI:Notify({ Title = "Conveyor", Content = "Equipping "..selectedConveyorKey, Duration = 3 })
+    end
 })
 
-ConveyorTab:CreateToggle({
-    Name         = "Auto Equip Best Unlocked Conveyor",
-    CurrentValue = false,
-    Flag         = "AutoConveyorToggle",
-    Callback     = function(val)
-        State.AutoConveyor.enabled = val
-        if val then
+Tab:Toggle({
+    Title = "Auto Equip Best Unlocked Conveyor",
+    Value = false,
+    Callback = function(v)
+        State.AutoConveyor.enabled = v
+        if v then
             ConnectionManager:Cleanup("AutoConveyor")
             local thread = task.spawn(function()
                 while State.AutoConveyor.enabled do
-                    local data     = getClientData()
+                    local data = getClientData()
                     local unlocked = (data.ConveyorUpgrade and data.ConveyorUpgrade.UnlockedConveyors) or {}
                     local bestKey, bestPrice = nil, -1
                     if SharedConveyors and SharedConveyors.List then
                         for key, conv in pairs(SharedConveyors.List) do
                             if unlocked[key] and (conv.Price or 0) > bestPrice then
                                 bestPrice = conv.Price or 0
-                                bestKey   = key
+                                bestKey = key
                             end
                         end
                     end
-                    if bestKey then 
+                    if bestKey then
                         safeFireThrottled("HandleConveyor", HandleConveyor, 2, "equip", bestKey)
                     end
                     task.wait(30)
@@ -992,65 +918,55 @@ ConveyorTab:CreateToggle({
             end)
             ConnectionManager:RegisterThread("AutoConveyor", thread)
         end
-    end,
+    end
 })
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- TAB 6 — ⚡ PLAYER
 -- ══════════════════════════════════════════════════════════════════════════════
-local PlayerTab = Window:CreateTab("⚡ Player", 4483362458)
+Tab = Window:Tab({ Title = "Player", Icon = "user" })
 
 local walkSpeedConn = nil
 
-PlayerTab:CreateSlider({
-    Name         = "Walk Speed",
-    Range        = {16, 500},
-    Increment    = 1,
-    Suffix       = "",
-    CurrentValue = 16,
-    Flag         = "WalkSpeedSlider",
-    Callback     = function(val)
-        State.WalkSpeed = val
-        if walkSpeedConn then
-            walkSpeedConn:Disconnect()
-            walkSpeedConn = nil
-        end
-        if val > 16 then
+Tab:Slider({
+    Title = "Walk Speed",
+    Step = 1,
+    Value = { Min = 16, Max = 500, Default = 16 },
+    Callback = function(v)
+        State.WalkSpeed = v
+        if walkSpeedConn then walkSpeedConn:Disconnect(); walkSpeedConn = nil end
+        if v > 16 then
             walkSpeedConn = RunService.Heartbeat:Connect(function()
                 local char = LP.Character
-                local hum  = char and char:FindFirstChildOfClass("Humanoid")
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
                 if hum then hum.WalkSpeed = State.WalkSpeed end
             end)
         else
             local char = LP.Character
-            local hum  = char and char:FindFirstChildOfClass("Humanoid")
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
             if hum then hum.WalkSpeed = 16 end
         end
-    end,
+    end
 })
 
 local jumpConn = nil
 
-PlayerTab:CreateToggle({
-    Name         = "Infinite Jump",
-    CurrentValue = false,
-    Flag         = "InfJumpToggle",
-    Callback     = function(val)
-        State.InfJump.enabled = val
-        if jumpConn then
-            jumpConn:Disconnect()
-            jumpConn = nil
-        end
-        if val then
+Tab:Toggle({
+    Title = "Infinite Jump",
+    Value = false,
+    Callback = function(v)
+        State.InfJump.enabled = v
+        if jumpConn then jumpConn:Disconnect(); jumpConn = nil end
+        if v then
             jumpConn = UserInput.JumpRequest:Connect(function()
                 local char = LP.Character
-                local hum  = char and char:FindFirstChildOfClass("Humanoid")
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
                 if hum and State.InfJump.enabled then
                     hum:ChangeState(Enum.HumanoidStateType.Jumping)
                 end
             end)
         end
-    end,
+    end
 })
 
 local flyConn = nil
@@ -1060,9 +976,7 @@ local flySpeed = 1
 local function stopFly()
     flyActive = false
     State.Fly.enabled = false
-    
     if flyConn then flyConn:Disconnect(); flyConn = nil end
-    
     local char = LP.Character
     if char then
         local hum = char:FindFirstChildOfClass("Humanoid")
@@ -1091,13 +1005,10 @@ end
 local function startFly()
     local char = LP.Character
     if not char then return false end
-    
     local hum = char:FindFirstChildOfClass("Humanoid")
     if not hum then return false end
-    
     flyActive = true
     State.Fly.enabled = true
-    
     for _, state in ipairs({
         Enum.HumanoidStateType.Climbing, Enum.HumanoidStateType.FallingDown,
         Enum.HumanoidStateType.Flying, Enum.HumanoidStateType.Freefall,
@@ -1111,28 +1022,22 @@ local function startFly()
         hum:SetStateEnabled(state, false)
     end
     hum:ChangeState(Enum.HumanoidStateType.Swimming)
-    
     if char:FindFirstChild("Animate") then
         char.Animate.Disabled = true
     end
-    
     for _, v in ipairs(hum:GetPlayingAnimationTracks()) do
         v:AdjustSpeed(0)
     end
-    
     flyConn = RunService.Heartbeat:Connect(function()
         if not flyActive then return end
-        
         local c = LP.Character
         local h = c and c:FindFirstChildOfClass("Humanoid")
         if not c or not h then stopFly(); return end
-        
         if h.MoveDirection.Magnitude > 0 then
             for i = 1, flySpeed do
                 c:TranslateBy(h.MoveDirection * 0.5)
             end
         end
-        
         local hrp = c:FindFirstChild("HumanoidRootPart")
         if hrp then
             local verticalMove = 0
@@ -1146,35 +1051,28 @@ local function startFly()
             end
         end
     end)
-    
     return true
 end
 
-PlayerTab:CreateToggle({
-    Name         = "Fly",
-    CurrentValue = false,
-    Flag         = "FlyToggle",
-    Callback     = function(val)
-        if val then
+Tab:Toggle({
+    Title = "Fly",
+    Value = false,
+    Callback = function(v)
+        if v then
             stopFly()
             if not LP.Character then LP.CharacterAdded:Wait() end
             startFly()
         else
             stopFly()
         end
-    end,
+    end
 })
 
-PlayerTab:CreateSlider({
-    Name         = "Fly Speed",
-    Range        = {1, 10},
-    Increment    = 1,
-    Suffix       = "x",
-    CurrentValue = 1,
-    Flag         = "FlySpeedSlider",
-    Callback     = function(val)
-        flySpeed = val
-    end,
+Tab:Slider({
+    Title = "Fly Speed",
+    Step = 1,
+    Value = { Min = 1, Max = 10, Default = 1 },
+    Callback = function(v) flySpeed = v end
 })
 
 LP.CharacterAdded:Connect(function()
@@ -1188,7 +1086,7 @@ end)
 -- ══════════════════════════════════════════════════════════════════════════════
 -- TAB 7 — 🔍 ESP
 -- ══════════════════════════════════════════════════════════════════════════════
-local ESPTab = Window:CreateTab("🔍 ESP", 4483362458)
+Tab = Window:Tab({ Title = "ESP", Icon = "eye" })
 
 local espBillboards = {}
 local flowerESP = {}
@@ -1228,23 +1126,20 @@ local function createBillboard(adornee, text, color)
     return bb
 end
 
-ESPTab:CreateToggle({
-    Name         = "Flower ESP",
-    CurrentValue = false,
-    Flag         = "FlowerESPToggle",
-    Callback     = function(val)
-        State.ESPFlower.enabled = val
-        if not val then
+Tab:Toggle({
+    Title = "Flower ESP",
+    Value = false,
+    Callback = function(v)
+        State.ESPFlower.enabled = v
+        if not v then
             for _, bb in pairs(flowerESP) do pcall(function() bb:Destroy() end) end
             flowerESP = {}
             return
         end
-        
         ConnectionManager:Cleanup("FlowerESP")
         local thread = task.spawn(function()
             while State.ESPFlower.enabled do
                 local currentFlowers = {}
-                
                 for _, plot in ipairs(Plots:GetChildren()) do
                     local placedItems = plot:FindFirstChild("PlacedItems")
                     if placedItems then
@@ -1258,45 +1153,39 @@ ESPTab:CreateToggle({
                         end
                     end
                 end
-                
                 for part, bb in pairs(flowerESP) do
                     if not currentFlowers[part] then
                         pcall(function() bb:Destroy() end)
                         flowerESP[part] = nil
                     end
                 end
-                
                 for part, name in pairs(currentFlowers) do
                     if not flowerESP[part] then
                         flowerESP[part] = createBillboard(part, name, Color3.fromRGB(255, 100, 200))
                         table.insert(espBillboards, flowerESP[part])
                     end
                 end
-                
                 task.wait(1)
             end
         end)
         ConnectionManager:RegisterThread("FlowerESP", thread)
-    end,
+    end
 })
 
-ESPTab:CreateToggle({
-    Name         = "Player ESP",
-    CurrentValue = false,
-    Flag         = "PlayerESPToggle",
-    Callback     = function(val)
-        State.ESPPlayer.enabled = val
-        if not val then
+Tab:Toggle({
+    Title = "Player ESP",
+    Value = false,
+    Callback = function(v)
+        State.ESPPlayer.enabled = v
+        if not v then
             for _, bb in pairs(playerESP) do pcall(function() bb:Destroy() end) end
             playerESP = {}
             return
         end
-        
         ConnectionManager:Cleanup("PlayerESP")
         local thread = task.spawn(function()
             while State.ESPPlayer.enabled do
                 local currentPlayers = {}
-                
                 for _, player in ipairs(Players:GetPlayers()) do
                     if player ~= LP then
                         local char = player.Character
@@ -1308,7 +1197,6 @@ ESPTab:CreateToggle({
                         end
                     end
                 end
-                
                 for hrp, bb in pairs(playerESP) do
                     if not currentPlayers[hrp] then
                         pcall(function() bb:Destroy() end)
@@ -1321,50 +1209,180 @@ ESPTab:CreateToggle({
                         end
                     end
                 end
-                
                 for hrp, data in pairs(currentPlayers) do
                     if not playerESP[hrp] then
                         playerESP[hrp] = createBillboard(hrp, data.name .. " " .. data.dist .. "m", Color3.fromRGB(255, 220, 50))
                         table.insert(espBillboards, playerESP[hrp])
                     end
                 end
-                
                 task.wait(0.5)
             end
         end)
         ConnectionManager:RegisterThread("PlayerESP", thread)
-    end,
+    end
 })
 
 -- ══════════════════════════════════════════════════════════════════════════════
--- TAB 8 — 🏪 MISC
+-- TAB 8 — 🚀 TELEPORT (Auto Collect)
 -- ══════════════════════════════════════════════════════════════════════════════
-local MiscTab = Window:CreateTab("🏪 Misc", 4483362458)
+Tab = Window:Tab({ Title = "Teleport", Icon = "rocket" })
 
-MiscTab:CreateButton({
-    Name     = "Rejoin Server",
+-- Auto Easter Egg
+Tab:Section({ Title = "Easter Egg", Opened = true })
+Tab:Toggle({
+    Title = "Auto Collect Easter Eggs",
+    Value = false,
+    Callback = function(v)
+        State.AutoEasterEgg = v
+        if v then
+            ConnectionManager:Cleanup("AutoEasterEgg")
+            local thread = task.spawn(function()
+                local collected = {}
+                while State.AutoEasterEgg do
+                    for _, obj in ipairs(workspace:GetChildren()) do
+                        if not State.AutoEasterEgg then break end
+                        local name = obj.Name
+                        if name:match("^EasterEgg_%d+$") and name ~= "EasterEgg_HoneyPot" then
+                            if not collected[obj] then
+                                -- 检查 Pivot 位置，Y 不能为负
+                                local pos = obj:GetPivot().Position
+                                if pos.Y >= -1 then
+                                    local prompt = obj:FindFirstChildOfClass("ProximityPrompt")
+                                    if not prompt then
+                                        for _, desc in ipairs(obj:GetDescendants()) do
+                                            if desc:IsA("ProximityPrompt") then prompt = desc; break end
+                                        end
+                                    end
+                                    if prompt and prompt.Enabled then
+                                        tweenTo(pos)
+                                        fireProximityPrompt(prompt)
+                                        collected[obj] = true
+                                        WindUI:Notify({ Title = "🥚 Easter Egg", Content = "Collected "..name, Duration = 1.5, Icon = "egg" })
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    task.wait(1)
+                end
+            end)
+            ConnectionManager:RegisterThread("AutoEasterEgg", thread)
+        end
+    end
+})
+
+-- Auto Snowflake
+Tab:Section({ Title = "Snowflake", Opened = true })
+Tab:Toggle({
+    Title = "Auto Collect Snowflakes",
+    Value = false,
+    Callback = function(v)
+        State.AutoSnowflake = v
+        if v then
+            ConnectionManager:Cleanup("AutoSnowflake")
+            local thread = task.spawn(function()
+                local collected = {}
+                while State.AutoSnowflake do
+                    local folder = workspace:FindFirstChild("SnowflakePickup")
+                    if folder then
+                        for _, obj in ipairs(folder:GetChildren()) do
+                            if not State.AutoSnowflake then break end
+                            if not collected[obj] then
+                                local prompt = obj:FindFirstChildOfClass("ProximityPrompt")
+                                if not prompt then
+                                    for _, desc in ipairs(obj:GetDescendants()) do
+                                        if desc:IsA("ProximityPrompt") then prompt = desc; break end
+                                    end
+                                end
+                                if prompt and prompt.Enabled then
+                                    local pos = getModelPosition(obj)
+                                    if pos then
+                                        tweenTo(pos)
+                                        fireProximityPrompt(prompt)
+                                        collected[obj] = true
+                                        WindUI:Notify({ Title = "❄️ Snowflake", Content = "Collected", Duration = 1.5, Icon = "snowflake" })
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    task.wait(0.5)
+                end
+            end)
+            ConnectionManager:RegisterThread("AutoSnowflake", thread)
+        end
+    end
+})
+
+-- Auto Meteoron
+Tab:Section({ Title = "Meteoron", Opened = true })
+Tab:Toggle({
+    Title = "Auto Collect Meteorons",
+    Value = false,
+    Callback = function(v)
+        State.AutoMeteoron = v
+        if v then
+            ConnectionManager:Cleanup("AutoMeteoron")
+            local thread = task.spawn(function()
+                local collected = {}
+                while State.AutoMeteoron do
+                    local folder = workspace:FindFirstChild("MeteoronPickup")
+                    if folder then
+                        for _, obj in ipairs(folder:GetChildren()) do
+                            if not State.AutoMeteoron then break end
+                            if not collected[obj] then
+                                local prompt = obj:FindFirstChildOfClass("ProximityPrompt")
+                                if not prompt then
+                                    for _, desc in ipairs(obj:GetDescendants()) do
+                                        if desc:IsA("ProximityPrompt") then prompt = desc; break end
+                                    end
+                                end
+                                if prompt and prompt.Enabled then
+                                    local pos = getModelPosition(obj)
+                                    if pos then
+                                        tweenTo(pos)
+                                        fireProximityPrompt(prompt)
+                                        collected[obj] = true
+                                        WindUI:Notify({ Title = "☄️ Meteoron", Content = "Collected", Duration = 1.5, Icon = "meteor" })
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    task.wait(0.5)
+                end
+            end)
+            ConnectionManager:RegisterThread("AutoMeteoron", thread)
+        end
+    end
+})
+
+
+-- ══════════════════════════════════════════════════════════════════════════════
+-- TAB 9 — 🏪 MISC
+-- ══════════════════════════════════════════════════════════════════════════════
+Tab = Window:Tab({ Title = "Misc", Icon = "shuffle" })
+
+Tab:Button({
+    Title = "Rejoin Server",
     Callback = function()
-        Rayfield:Notify({ Title="Rejoin", Content="Rejoining...", Duration=2 })
-        task.wait(1)
         TeleportSvc:Teleport(game.PlaceId, LP)
-    end,
+    end
 })
 
-MiscTab:CreateButton({
-    Name     = "Find Low Pop Server",
+Tab:Button({
+    Title = "Find Low Pop Server",
     Callback = function()
-        Rayfield:Notify({ Title="Server Hop", Content="Searching...", Duration=2 })
+        WindUI:Notify({ Title = "Server Hop", Content = "Searching...", Duration = 2 })
         task.spawn(function()
             local placeId, currentId = game.PlaceId, game.JobId
             local url = "https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100"
             local lowest, lowestPop = nil, math.huge
             local cursor, searched, maxPages = nil, 0, 3
-            
             repeat
                 local fullUrl = url .. (cursor and ("&cursor=" .. cursor) or "")
                 local ok, result = pcall(function() return HttpService:JSONDecode(game:HttpGet(fullUrl)) end)
                 if not ok or not result or not result.data then break end
-                
                 for _, server in ipairs(result.data) do
                     if server.id ~= currentId and type(server.playing) == "number" and server.playing < lowestPop and server.playing > 0 then
                         lowestPop, lowest = server.playing, server.id
@@ -1372,50 +1390,47 @@ MiscTab:CreateButton({
                 end
                 cursor, searched = result.nextPageCursor, searched + 1
             until (not cursor) or searched >= maxPages
-            
             if lowest then
-                Rayfield:Notify({ Title="Server Hop", Content="Found server with " .. lowestPop .. " players. Joining...", Duration=3 })
+                WindUI:Notify({ Title = "Server Hop", Content = "Found server with " .. lowestPop .. " players. Joining...", Duration = 3 })
                 task.wait(1.5)
                 TeleportSvc:TeleportToPlaceInstance(placeId, lowest, LP)
             else
-                Rayfield:Notify({ Title="Server Hop", Content="No suitable server found.", Duration=3 })
+                WindUI:Notify({ Title = "Server Hop", Content = "No suitable server found.", Duration = 3 })
             end
         end)
-    end,
+    end
 })
 
 -- ══════════════════════════════════════════════════════════════════════════════
--- TAB 9 — ⛔ STOP ALL
+-- TAB 10 — ⛔ STOP ALL
 -- ══════════════════════════════════════════════════════════════════════════════
-local StopTab = Window:CreateTab("⛔ Stop All", 4483362458)
+Tab = Window:Tab({ Title = "Stop", Icon = "octagon" })
 
-StopTab:CreateButton({
-    Name     = "⛔ Disable All Features",
+Tab:Button({
+    Title = "⛔ Disable All Features",
+    Color = "Red",
     Callback = function()
         for _, s in pairs(State) do
             if type(s) == "table" and s.enabled ~= nil then
                 s.enabled = false
             end
         end
-        
         ConnectionManager:CleanupAll()
         clearESP()
         stopFly()
         if walkSpeedConn then walkSpeedConn:Disconnect(); walkSpeedConn = nil end
         if jumpConn then jumpConn:Disconnect(); jumpConn = nil end
-        
         local char = LP.Character
         local hum  = char and char:FindFirstChildOfClass("Humanoid")
         if hum then hum.PlatformStand = false; hum.WalkSpeed = 16 end
-        
-        Rayfield:Notify({ Title="Stopped", Content="All features disabled.", Duration=3 })
-    end,
+        WindUI:Notify({ Title = "Stopped", Content = "All features disabled.", Duration = 3, Icon = "check-circle" })
+    end
 })
 
 -- ─── Startup ──────────────────────────────────────────────────────────────────
-Rayfield:Notify({
-    Title    = "🐝 Bee Garden Script by Dwine",
-    Content  = "Loaded! Economy · Bees · Eggs · Flowers · Conveyor · Player · ESP · Misc",
-    Duration = 6,
-    Image    = 4483362458,
+WindUI:Notify({
+    Title = "🐝 Bee Garden",
+    Content = "Loaded! Use the floating button to open/close.",
+    Duration = 5,
+    Icon = "bee",
 })
