@@ -1225,7 +1225,7 @@ Tab:Toggle({
 -- ══════════════════════════════════════════════════════════════════════════════
 -- TAB 8 — 🚀 TELEPORT (Auto Collect)
 -- ══════════════════════════════════════════════════════════════════════════════
-Tab = Window:Tab({ Title = "Teleport", Icon = "rocket" })
+Tab = Window:Tab({ Title = "Teleport", Icon = "map-pinned" })
 
 -- Auto Easter Egg
 Tab:Section({ Title = "Easter Egg", Opened = true })
@@ -1358,10 +1358,11 @@ Tab:Toggle({
 })
 
 
+
 -- ══════════════════════════════════════════════════════════════════════════════
 -- TAB 9 — 🏪 MISC
 -- ══════════════════════════════════════════════════════════════════════════════
-Tab = Window:Tab({ Title = "Misc", Icon = "shuffle" })
+Tab = Window:Tab({ Title = "Server", Icon = "map-pin" })
 
 Tab:Button({
     Title = "Rejoin Server",
